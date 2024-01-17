@@ -7,7 +7,7 @@ import {
 } from "@mysten/dapp-kit";
 import { SuiObjectData } from "@mysten/sui.js/client";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
-import { SHOOTOFF_PACKAGE_ID } from "../../constants";
+import { TESTNET_SHOOTOFF_PACKAGE_ID } from "../constants";
 
 export function GameWindow() {
   const client = useSuiClient();
@@ -22,16 +22,16 @@ export function GameWindow() {
   async function createNewGame() {
     let transactionBlock = new TransactionBlock();
     transactionBlock.moveCall({
-      target: `${SHOOTOFF_PACKAGE_ID}::shootoff::StartNewGame`,
+      target: `${TESTNET_SHOOTOFF_PACKAGE_ID}::shootoff::StartNewGame`,
       arguments: [
         transactionBlock.pure(account_address), //player account address
-        transactionBlock.pure("8"), //buyin
+        transactionBlock.pure("1"), //buyin
       ],
     });
     signAndExecuteTransactionBlock(
       {
         transactionBlock,
-        chain: "sui:devnet", //TODO: update
+        chain: "sui:testnet", //TODO: update
       },
       {
         onSuccess: (tx) => {
