@@ -15,6 +15,11 @@ module shootoff::game {
     //const CHEAT: u8 = 111;
 
     //Game status
+    const STATUS_READY: u8 = 0;
+    const STATUS_HASH_SUBMISSION: u8 = 1;
+    const STATUS_HASHES_SUBMITTED: u8 = 2;
+    const STATUS_REVEALING: u8 = 3;
+    const STATUS_REVEALED: u8 = 4;
 
     struct PrizePool has key, store {
         id: UID
@@ -51,7 +56,24 @@ module shootoff::game {
         gesture_two: u8,
     }
 
-    // fun init(ctx: &mut TxContext)
+    public fun status(game: &Game): u8 {
+        let h1_len = vector::length(&game.hash_one);
+        let h2_len = vector::length(&game.hash_two);
+
+        if (game.gesture_one != NONE && game.gesture_two != NONE) {
+            STATUS_REVEALED
+        } else if (game.gesture_one != NONE || game.gesture_two != NONE) {
+            STATUS_REVEALING
+        } else if (h1_len == 0 && h2_len == 0) {
+            STATUS_READY
+        } else if (h1_len != 0 && h2_len != 0) {
+            STATUS_HASHES_SUBMITTED
+        } else if (h1_len != 0 || h2_len != 0) {
+            STATUS_HASH_SUBMISSION
+        } else {
+            0
+        }
+    }
 
     public entry fun new_game(player_one: address, player_two: address, ctx: &mut TxContext) {
         let player_one_state = Player {
@@ -79,60 +101,41 @@ module shootoff::game {
         }, tx_context::sender(ctx));
     }
 
-    public entry fun round_winner(game: Game, ctx: &TxContext) {
-        let Game {
-            id,
-            prize,
-            player_one,
-            player_two,
-            player_one_state,
-            player_two_state,
-            hash_one: _,
-            hash_two: _,
-            gesture_one,
-            gesture_two,
-        } = game;
-
-        let p1_wins = play(gesture_one, gesture_two);
-        let p2_wins = play(gesture_two, gesture_one);
-
-        object::delete(id);
+    public entry fun round_winner(game: &mut Game) {
+        let p1_wins = play(game.gesture_one, game.gesture_two);
+        let p2_wins = play(game.gesture_two, game.gesture_one);
 
         if (p1_wins) {
-            player_two_state.lives = player_two_state.lives - 1;
+            game.player_two_state.lives = game.player_two_state.lives - 1;
         } else if (p2_wins) {
-            player_one_state.lives = player_one_state.lives - 1;
+            game.player_one_state.lives = game.player_one_state.lives - 1;
         };
     }
 
-    public entry fun select_winner(game: Game, ctx: &TxContext) {
-        assert!(status(&game) == STATUS_REVEALED, 0);
-        //all the other stuff
-        let Game {
-            id,
-            prize,
-            player_one,
-            player_two,
-            player_one_state,
-            player_two_state,
-            hash_one: _,
-            hash_two: _,
-            gesture_one,
-            gesture_two,
-        } = game;
+    // public entry fun select_winner(game: Game, ctx: &TxContext) {
+    //     assert!(status(&game) == STATUS_REVEALED, 0);
+    //     // Additional checks and logic...
+    //     let Game {
+    //         id,
+    //         prize,
+    //         player_one,
+    //         player_two,
+    //         player_one_state,
+    //         player_two_state,
+    //         hash_one: _,
+    //         hash_two: _,
+    //         gesture_one,
+    //         gesture_two,
+    //     } = game;
+        
+    //     object::delete(id);
 
-        object::delete(id);
-
-        //decided winner
-        if (player_one_state.lives == 0) {
-            transfer::public_transfer(prize, player_one)
-        } else if (player_two_state.lives == 0) {
-            transfer::public_transfer(prize, player_two)
-        };
-        // else {
-        //     contineu
-        // };
-    }
+    //     if (player_one_state.lives == 0) {
+    //         transfer::public_transfer(prize, player_one)
+    //     } else if (player_two_state.lives == 0) {
+    //         transfer::public_transfer(prize, player_two)
+    //     };
+    // }
 
     fun play(action_one: u8, action_two: u8): bool {
         if (action_one == action_two) { false } //no winner if the actions are the same
@@ -163,7 +166,7 @@ module shootoff::game {
             NONE
         }
     }
-    public fun block(player_state: &mut Player): u8 {
+    public fun block(): u8 {
         BLOCK
     }
 
