@@ -14,6 +14,8 @@ module shootoff::game {
     const KILL_SHOT: u8 = 5;
     //const CHEAT: u8 = 111;
 
+    const InvalidMove: u8 = 0;
+
     //Game status
     const STATUS_READY: u8 = 0;
     const STATUS_HASH_SUBMISSION: u8 = 1;
@@ -23,12 +25,6 @@ module shootoff::game {
 
     struct PrizePool has key, store {
         id: UID
-    }
-
-    struct Player has key, store {
-        id: UID,
-        lives: u64,
-        bullets: u64,
     }
 
     struct PlayerTurn has key {
@@ -48,21 +44,23 @@ module shootoff::game {
         prize: PrizePool,
         player_one: address,
         player_two: address,
-        player_one_state: Player,
-        player_two_state: Player,
+        player_one_lives: u64,
+        player_one_bullets: u64,
+        player_two_lives: u64,
+        player_two_bullets: u64,
         hash_one: vector<u8>,
         hash_two: vector<u8>,
-        gesture_one: u8,
-        gesture_two: u8,
+        action_one: u8,
+        action_two: u8,
     }
 
     public fun status(game: &Game): u8 {
         let h1_len = vector::length(&game.hash_one);
         let h2_len = vector::length(&game.hash_two);
 
-        if (game.gesture_one != NONE && game.gesture_two != NONE) {
+        if (game.action_one != NONE && game.action_two != NONE) {
             STATUS_REVEALED
-        } else if (game.gesture_one != NONE || game.gesture_two != NONE) {
+        } else if (game.action_one != NONE || game.action_two != NONE) {
             STATUS_REVEALING
         } else if (h1_len == 0 && h2_len == 0) {
             STATUS_READY
@@ -76,66 +74,63 @@ module shootoff::game {
     }
 
     public entry fun new_game(player_one: address, player_two: address, ctx: &mut TxContext) {
-        let player_one_state = Player {
-            id: object::new(ctx),
-            lives: 3,
-            bullets: 0,
-        };
-        let player_two_state = Player {
-            id: object::new(ctx),
-            lives: 3,
-            bullets: 0,            
-        };
-
         transfer::transfer(Game {
             id: object::new(ctx),
             prize: PrizePool { id: object::new(ctx) },
             player_one,
             player_two,
-            player_one_state: player_one_state,
-            player_two_state: player_two_state,
+            player_one_lives: 3,
+            player_one_bullets: 0,
+            player_two_lives: 3,
+            player_two_bullets: 0,
             hash_one: vector[],
             hash_two: vector[],
-            gesture_one: NONE,
-            gesture_two: NONE,
+            action_one: NONE,
+            action_two: NONE,
         }, tx_context::sender(ctx));
     }
 
-    public entry fun round_winner(game: &mut Game) {
-        let p1_wins = play(game.gesture_one, game.gesture_two);
-        let p2_wins = play(game.gesture_two, game.gesture_one);
+    public entry fun select_winner(game: Game) {
+        let Game {
+            id,
+            prize,
+            player_one,
+            player_two,
+            player_one_lives,
+            player_one_bullets:_,
+            player_two_lives,
+            player_two_bullets:_,
+            hash_one: _,
+            hash_two: _,
+            action_one,
+            action_two,
+        } = game;
 
-        if (p1_wins) {
-            game.player_two_state.lives = game.player_two_state.lives - 1;
-        } else if (p2_wins) {
-            game.player_one_state.lives = game.player_one_state.lives - 1;
+        while (player_one_lives > 0 && player_two_lives > 0) {
+            let p1_wins = play(action_one, action_two);
+            let p2_wins = play(action_two, action_one);
+
+            if (p1_wins) {
+                player_two_lives = player_two_lives - 1;
+            } else if (p2_wins) {
+                player_one_lives = player_one_lives - 1;
+            };
         };
+
+        let winner: address;
+
+        if (player_two_lives == 0) {
+            winner = player_one;
+        } else if (player_one_lives == 0) {
+            winner = player_two;
+        } else {
+            abort 0;
+        };
+
+        transfer::public_transfer(prize, winner);
+
+        object::delete(id);
     }
-
-    // public entry fun select_winner(game: Game, ctx: &TxContext) {
-    //     assert!(status(&game) == STATUS_REVEALED, 0);
-    //     // Additional checks and logic...
-    //     let Game {
-    //         id,
-    //         prize,
-    //         player_one,
-    //         player_two,
-    //         player_one_state,
-    //         player_two_state,
-    //         hash_one: _,
-    //         hash_two: _,
-    //         gesture_one,
-    //         gesture_two,
-    //     } = game;
-        
-    //     object::delete(id);
-
-    //     if (player_one_state.lives == 0) {
-    //         transfer::public_transfer(prize, player_one)
-    //     } else if (player_two_state.lives == 0) {
-    //         transfer::public_transfer(prize, player_two)
-    //     };
-    // }
 
     fun play(action_one: u8, action_two: u8): bool {
         if (action_one == action_two) { false } //no winner if the actions are the same
@@ -144,47 +139,61 @@ module shootoff::game {
         else { false } 
     }
 
-    public fun lose_life(player_state: &mut Player) {
-        if (player_state.lives > 0) {
-            player_state.lives = player_state.lives - 1;
+    public fun lose_life(game: &mut Game, player: address) {
+        if (player == game.player_one && game.player_one_lives > 0) {
+            game.player_one_lives = game.player_one_lives - 1;
+        } else if (player == game.player_two && game.player_two_lives > 0) {
+            game.player_two_lives = game.player_two_lives - 1;
         }
     }
 
-    public fun reload(player_state: &mut Player): u8 {
-        if (player_state.bullets < 3) {
-            player_state.bullets = player_state.bullets + 1;
+    public fun reload(game: &mut Game, player: address): u8 {
+        if (player == game.player_one && game.player_one_bullets < 3) {
+            game.player_one_bullets = game.player_one_bullets + 1;
+            RELOAD 
+        } else if (player == game.player_two && game.player_two_bullets < 3) {
+            game.player_two_bullets = game.player_two_bullets + 1;
             RELOAD 
         } else {
-            NONE
+            InvalidMove
         }
     }
-    public fun shoot(player_state: &mut Player): u8 {
-        if (player_state.bullets > 0) {
-            player_state.bullets = player_state.bullets - 1;
-            SHOOT
+    public fun shoot(game: &mut Game, player: address): u8 {
+        if (player == game.player_one && game.player_one_bullets > 0) {
+            game.player_one_bullets = game.player_one_bullets - 1;
+            SHOOT 
+        } else if (player == game.player_two && game.player_two_bullets > 0) {
+            game.player_two_bullets = game.player_two_bullets - 1;
+            SHOOT 
         } else {
-            NONE
+            InvalidMove
         }
     }
     public fun block(): u8 {
         BLOCK
     }
 
-    public fun reflect(player_state: &mut Player): u8 {
-        if (player_state.bullets > 0) {
-            player_state.bullets = player_state.bullets - 1;
-            REFLECT
+    public fun reflect(game: &mut Game, player: address): u8 {
+        if (player == game.player_one && game.player_one_bullets > 0) {
+            game.player_one_bullets = game.player_one_bullets - 1;
+            REFLECT 
+        } else if (player == game.player_two && game.player_two_bullets > 0) {
+            game.player_two_bullets = game.player_two_bullets - 1;
+            REFLECT 
         } else {
-            NONE
+            InvalidMove
         }
     }
 
-    public fun kill_shot(player_state: &mut Player): u8 {
-        if (player_state.bullets == 3) {
-            player_state.bullets = player_state.bullets - 3;
-            KILL_SHOT
+    public fun kill_shot(game: &mut Game, player: address): u8 {
+        if (player == game.player_one && game.player_one_bullets == 3) {
+            game.player_one_bullets = game.player_one_bullets - 3;
+            KILL_SHOT 
+        } else if (player == game.player_two && game.player_two_bullets == 3) {
+            game.player_two_bullets = game.player_two_bullets - 3;
+            KILL_SHOT 
         } else {
-            NONE
+            InvalidMove
         }
     }
     
