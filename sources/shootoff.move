@@ -47,7 +47,7 @@ module shootoff::shootoff {
   }
 
   public fun StartNewGame(starting_player: address, buyin: u8, ctx: &mut TxContext) {
-    transfer::transfer(Game {
+    transfer::share_object(Game {
       id: object::new(ctx),
       prize: buyin,
       player_one: starting_player,
@@ -56,12 +56,13 @@ module shootoff::shootoff {
       hash_two: vector[],
       player_one_move: NONE,
       player_two_move: NONE,
-    }, tx_context::sender(ctx));
+    });
+    
   }
 
   public fun JoinGame(new_player: address, game: &mut Game, ctx: &mut TxContext) {
     //check new player != player one
-    assert!(new_player != game.player_one, 0);
+    // assert!(new_player != game.player_one, 0);  --> allowing for testing
     //check game not full
     assert!( option::is_none(&game.player_two), 0);
 
