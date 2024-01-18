@@ -1,10 +1,8 @@
 import { useSuiClientQuery } from "@mysten/dapp-kit";
 
-// [Q] Why is this wrapped
 export const useGetGameInfo = () => {
-  const handleGetGameInfo = () => {
-    // TODO: user's active game
-    const id: string = "<ACTIVE_GAME_ID>";
+  function getGameInfo(game_id) {
+    const id: string = game_id;
 
     const { data, isLoading, error, refetch } = useSuiClientQuery("getObject", {
       id,
@@ -15,7 +13,6 @@ export const useGetGameInfo = () => {
     });
 
     return { data, isLoading, error, refetch };
-  };
-
-  return { handleGetGameInfo };
+  }
+  return { getGameInfo };
 };

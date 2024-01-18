@@ -8,6 +8,7 @@ import {
 import { SuiObjectData } from "@mysten/sui.js/client";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { TESTNET_SHOOTOFF_PACKAGE_ID } from "../constants";
+import { useGetGameInfo } from "../getGameInfo";
 
 export function GameWindow() {
   const [game_active, set_game_active] = React.useState(false);
@@ -58,12 +59,18 @@ export function GameWindow() {
     );
   }
 
-  async function joinGame(game_id) {
+  async function joinGame(event) {
+    event.preventDefault();
     console.log("join game function, game id:", game_id);
+    console.log("account_address", account_address);
+    // const { getGameInfo } = useGetGameInfo();
+    // const { data, isLoading, error, refetch } = getGameInfo(game_id);
+
     let transactionBlock = new TransactionBlock();
     transactionBlock.moveCall({
       target: `${TESTNET_SHOOTOFF_PACKAGE_ID}::shootoff::JoinGame`,
       arguments: [
+        transactionBlock.object(game_id), //TODO this is not working
         transactionBlock.pure(account_address), //player account address
       ],
     });
@@ -79,16 +86,14 @@ export function GameWindow() {
       {
         onSuccess: (tx) => {
           console.log(tx);
-          client.waitForTransactionBlock({ digest: tx.digest }).then(() => {
-            const object_id = tx.effects?.created?.[0]?.reference?.objectId;
-            if (object_id) {
-              console.log(object_id);
-              set_game_active(true);
-              set_game_id(object_id);
-            }
-          });
+          set_game_active(true);
+          set_game_id(game_id);
+          // client.waitForTransactionBlock({ digest: tx.digest }).then(() => {
+          //   refetch();
+          // });
         },
         onError: (err) => {
+          console.log("error");
           console.log(err);
         },
       }
@@ -104,7 +109,18 @@ export function GameWindow() {
           ) : (
             <div>
               <Button onClick={createNewGame}> Start A Game </Button>
-              <JoinGame joinGame={joinGame} />
+              <p> OR </p>
+              <form onSubmit={joinGame}>
+                <label>
+                  Join with game ID:
+                  <input
+                    type="text"
+                    value={game_id}
+                    onChange={(e) => set_game_id(e.target.value)}
+                  />
+                </label>
+                <input type="submit" />
+              </form>
             </div>
           )}
         </div>
@@ -115,54 +131,8 @@ export function GameWindow() {
 
 function CurrentGame({ game_id }) {
   return (
-    <body>
-      <p> game code (share with a friend!): {game_id} </p>
-    </body>
-  );
-}
-
-function JoinGame({ joinGame }) {
-  return (
     <div>
-      <p> To join a game, enter an ID. </p>
-      <JoinGameForm joinGame={joinGame} />;
+      <p> game code (share with a friend!): {game_id} </p>
     </div>
   );
-}
-
-class JoinGameForm extends React.Component<{}, { value: string }> {
-  constructor(props) {
-    super(props);
-    this.state = { value: "" };
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({ value: event.target.value });
-  }
-
-  handleSubmit(event) {
-    this.props.joinGame(this.state.value);
-    event.preventDefault();
-  }
-
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Game ID:
-          <input
-            type="text"
-            value={this.state.value}
-            onChange={this.handleChange}
-          />
-        </label>
-        <Button type="submit" value="Join Game">
-          Join Game
-        </Button>
-      </form>
-    );
-  }
 }

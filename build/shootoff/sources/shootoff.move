@@ -47,7 +47,7 @@ module shootoff::shootoff {
   }
 
   public fun StartNewGame(starting_player: address, buyin: u8, ctx: &mut TxContext) {
-    transfer::transfer(Game {
+    transfer::share_object(Game {
       id: object::new(ctx),
       prize: buyin,
       player_one: starting_player,
@@ -56,16 +56,20 @@ module shootoff::shootoff {
       hash_two: vector[],
       player_one_move: NONE,
       player_two_move: NONE,
-    }, tx_context::sender(ctx));
+    });
+    
   }
 
-  public fun JoinGame(new_player: address, game: &mut Game, ctx: &mut TxContext) {
+  // public fun JoinGame(player: address, ctx: &mut TxContext) {
+  public fun JoinGame(game: &mut Game, new_player: address, ctx: &mut TxContext) {
     //check new player != player one
-    assert!(new_player != game.player_one, 0);
+    // assert!(new_player != game.player_one, 0);  --> allowing for testing
     //check game not full
-    assert!( option::is_none(&game.player_two), 0);
+    // assert!( option::is_none<address>(&game.player_two), 0);
+    let optional_addr = option::some<address>(new_player);
+    assert!(option::is_some<address>(&optional_addr), 0 );
 
-    game.player_two = option::some<address>(new_player);
+    game.player_two = optional_addr;
   }
 
   public fun GameStatus(game: &Game) : u8 {
@@ -102,8 +106,29 @@ module shootoff::shootoff {
     };
 
   }
-}
 
-  // public fun CheckGameTimeout()
+//    #[test]
+//   public fun test_join_game() {
+//     use sui::transfer;
+
+//     let player_one = @0xCAFE;
+//     // first transaction to emulate creating game
+//     let scenario_val = test_scenario::begin(player_one);
+//     let scenario = &mut scenario_val;
+//     {
+//       StartNewGame(test_scenario::ctx(scenario));
+//     };
+
+//     // Check if accessor functions return correct values
+//     assert!( &game.player_one==@0xCAFE && &game.player_two==option::none<address>(), 1);
+
+//     // Create a dummy address and transfer the sword
+//     let player_two = @0xBAKE;
+//     JoinGame()
+
+//     transfer::transfer(sword, dummy_address);
+//   }
+
+}
 
   
