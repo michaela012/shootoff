@@ -7,6 +7,7 @@ import { getFullnodeUrl } from "@mysten/sui.js/client";
 import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Theme } from "@radix-ui/themes";
+import "../styles.css";
 import App from "./App.tsx";
 
 const queryClient = new QueryClient();

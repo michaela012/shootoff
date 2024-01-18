@@ -19,7 +19,12 @@ export function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
     return null;
   }
 
-  return <Button onClick={createNewGame}> Start A Game </Button>;
+  return (
+    <Button className="button" onClick={createNewGame}>
+      {" "}
+      Start A Game{" "}
+    </Button>
+  );
 
   function createNewGame() {
     let transactionBlock = new TransactionBlock();

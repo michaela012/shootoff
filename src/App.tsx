@@ -25,7 +25,7 @@ function App() {
         }}
       >
         <Box>
-          <Heading>SHOOTOUT</Heading>
+          <Heading id="name">SHOOTOUT</Heading>
         </Box>
 
         <Box>
@@ -49,7 +49,7 @@ function App() {
                   set_game_active(true);
                 }}
               />{" "}
-              OR
+              <div>OR</div>
               <JoinGame
                 onJoined={(id) => {
                   set_game_id(id);
