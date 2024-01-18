@@ -5,14 +5,14 @@ import React from "react";
 import { useState } from "react";
 import { OwnedObjects } from "./components/UserInfo";
 import { GameWindow } from "./components/GameWindow";
+import { CreateGame } from "./components/CreateGame";
+import { JoinGame } from "./components/JoinGame";
 
 function App() {
-  const currentAccount = useCurrentAccount();
-  // const [counterId, setCounter] = useState(() => {
-  //   const hash = window.location.hash.slice(1);
-  //   return isValidSuiObjectId(hash) ? hash : null;
-  // });
+  const [game_active, set_game_active] = React.useState(false);
+  const [game_id, set_game_id] = React.useState("");
 
+  ///
   return (
     <>
       <Flex
@@ -39,8 +39,25 @@ function App() {
           px="4"
           style={{ background: "var(--gray-a2)", minHeight: 500 }}
         >
-          <OwnedObjects />
-          <GameWindow />
+          {game_active ? (
+            <div> Your game: {game_id} </div>
+          ) : (
+            <div>
+              <CreateGame
+                onCreated={(id) => {
+                  set_game_id(id);
+                  set_game_active(true);
+                }}
+              />{" "}
+              OR
+              <JoinGame
+                onJoined={(id) => {
+                  set_game_id(id);
+                  set_game_active(true);
+                }}
+              />
+            </div>
+          )}
         </Container>
       </Container>
     </>
