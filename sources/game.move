@@ -12,7 +12,7 @@ module shootoff::game {
     const BLOCK: u8 = 3;
     const REFLECT: u8 = 4;
     const KILL_SHOT: u8 = 5;
-    //const CHEAT: u8 = 111;
+    const CHEAT: u8 = 111;
 
     const InvalidMove: u8 = 0;
 
@@ -23,9 +23,9 @@ module shootoff::game {
     const STATUS_REVEALING: u8 = 3;
     const STATUS_REVEALED: u8 = 4;
 
-    struct PrizePool has key, store {
-        id: UID
-    }
+    // struct PrizePool has key, store {
+    //     id: UID
+    // }
 
     struct PlayerTurn has key {
         id: UID,
@@ -41,7 +41,7 @@ module shootoff::game {
 
     struct Game has key {
         id: UID,
-        prize: PrizePool,
+        //prize: PrizePool,
         player_one: address,
         player_two: address,
         player_one_lives: u64,
@@ -54,29 +54,35 @@ module shootoff::game {
         action_two: u8,
     }
 
-    public fun status(game: &Game): u8 {
-        let h1_len = vector::length(&game.hash_one);
-        let h2_len = vector::length(&game.hash_two);
+    public fun get_player_one_lives(game: &Game): u64 {
+        game.player_one_lives
+    }
 
-        if (game.action_one != NONE && game.action_two != NONE) {
-            STATUS_REVEALED
-        } else if (game.action_one != NONE || game.action_two != NONE) {
-            STATUS_REVEALING
-        } else if (h1_len == 0 && h2_len == 0) {
-            STATUS_READY
-        } else if (h1_len != 0 && h2_len != 0) {
-            STATUS_HASHES_SUBMITTED
-        } else if (h1_len != 0 || h2_len != 0) {
-            STATUS_HASH_SUBMISSION
-        } else {
-            0
-        }
+    public fun get_player_two_lives(game: &Game): u64 {
+        game.player_two_lives
+    }
+
+    public fun get_player_one_bullets(game: &Game): u64 {
+        game.player_one_bullets
+    }
+
+    public fun get_player_two_bullets(game: &Game): u64 {
+        game.player_two_bullets
+    }
+
+    public fun get_action_one(game: &Game): u8 {
+        game.action_one
+    }
+
+    public fun get_action_two(game: &Game): u8 {
+        game.action_two
     }
 
     public entry fun new_game(player_one: address, player_two: address, ctx: &mut TxContext) {
-        transfer::transfer(Game {
+        let game = Game 
+        {
             id: object::new(ctx),
-            prize: PrizePool { id: object::new(ctx) },
+            //prize: PrizePool { id: object::new(ctx) },
             player_one,
             player_two,
             player_one_lives: 3,
@@ -87,13 +93,14 @@ module shootoff::game {
             hash_two: vector[],
             action_one: NONE,
             action_two: NONE,
-        }, tx_context::sender(ctx));
+        };
+        transfer::share_object(game);
     }
 
     public entry fun select_winner(game: Game) {
         let Game {
             id,
-            prize,
+            //prize,
             player_one,
             player_two,
             player_one_lives,
@@ -124,26 +131,33 @@ module shootoff::game {
         } else if (player_one_lives == 0) {
             winner = player_two;
         } else {
-            abort 0;
+            abort 0
         };
 
-        transfer::public_transfer(prize, winner);
+        //transfer::public_transfer(prize, winner);
 
         object::delete(id);
     }
 
-    fun play(action_one: u8, action_two: u8): bool {
-        if (action_one == action_two) { false } //no winner if the actions are the same
-        else if (action_one == REFLECT && action_two == SHOOT) { true }
-        else if (action_one == REFLECT && action_two == KILL_SHOT) { true}
+    public fun play(action_one: u8, action_two: u8): bool {
+        if (action_one == REFLECT && action_two == SHOOT) { true }
+        else if (action_one == REFLECT && action_two == KILL_SHOT) { true }
+        else if (action_one == SHOOT && action_two == RELOAD) { true }
+        else if (action_one == KILL_SHOT && action_two == RELOAD) { true }
+        else if (action_one == KILL_SHOT && action_two == SHOOT) { true }
+        else if (action_one == KILL_SHOT && action_two == BLOCK) { true }
         else { false } 
     }
 
-    public fun lose_life(game: &mut Game, player: address) {
+    public fun lose_life(game: &mut Game, player: address): bool {
         if (player == game.player_one && game.player_one_lives > 0) {
             game.player_one_lives = game.player_one_lives - 1;
+            true
         } else if (player == game.player_two && game.player_two_lives > 0) {
             game.player_two_lives = game.player_two_lives - 1;
+            true
+        } else {
+            false
         }
     }
 
@@ -158,6 +172,7 @@ module shootoff::game {
             InvalidMove
         }
     }
+
     public fun shoot(game: &mut Game, player: address): u8 {
         if (player == game.player_one && game.player_one_bullets > 0) {
             game.player_one_bullets = game.player_one_bullets - 1;
@@ -169,6 +184,7 @@ module shootoff::game {
             InvalidMove
         }
     }
+
     public fun block(): u8 {
         BLOCK
     }
@@ -196,8 +212,93 @@ module shootoff::game {
             InvalidMove
         }
     }
-    
-    fun hash(gesture: u8, salt: vector<u8>): vector<u8> {
+
+    public fun status(game: &Game): u8 {
+        let h1_len = vector::length(&game.hash_one);
+        let h2_len = vector::length(&game.hash_two);
+
+        if (game.action_one != NONE && game.action_two != NONE) {
+            STATUS_REVEALED
+        } else if (game.action_one != NONE || game.action_two != NONE) {
+            STATUS_REVEALING
+        } else if (h1_len == 0 && h2_len == 0) {
+            STATUS_READY
+        } else if (h1_len != 0 && h2_len != 0) {
+            STATUS_HASHES_SUBMITTED
+        } else if (h1_len != 0 || h2_len != 0) {
+            STATUS_HASH_SUBMISSION
+        } else {
+            0
+        }
+    }
+
+    public entry fun player_turn(at: address, hash: vector<u8>, ctx: &mut TxContext) {
+        transfer::transfer(PlayerTurn {
+            hash,
+            id: object::new(ctx),
+            player: tx_context::sender(ctx),
+        }, at);
+    }
+
+    public entry fun add_hash(game: &mut Game, cap: PlayerTurn) {
+        let PlayerTurn { hash, id, player } = cap;
+        let status = status(game);
+
+        assert!(status == STATUS_HASH_SUBMISSION || status == STATUS_READY, 0);
+        assert!(game.player_one == player || game.player_two == player, 0);
+
+        if (player == game.player_one && vector::length(&game.hash_one) == 0) {
+            game.hash_one = hash;
+        } else if (player == game.player_two && vector::length(&game.hash_two) == 0) {
+            game.hash_two = hash;
+        } else {
+            abort 0 // unreachable!()
+        };
+
+        object::delete(id);
+    }
+
+    public entry fun reveal(at: address, salt: vector<u8>, ctx: &mut TxContext) {
+        transfer::transfer(Secret {
+            id: object::new(ctx),
+            salt,
+            player: tx_context::sender(ctx),
+        }, at);
+    }
+
+    public entry fun match_secret(game: &mut Game, secret: Secret) {
+        let Secret { salt, player, id } = secret;
+
+        assert!(player == game.player_one || player == game.player_two, 0);
+
+        if (player == game.player_one) {
+            game.action_one = find_action(salt, &game.hash_one);
+        } else if (player == game.player_two) {
+            game.action_two = find_action(salt, &game.hash_two);
+        };
+
+        object::delete(id);
+    }
+
+    fun find_action(salt: vector<u8>, hash: &vector<u8>): u8 {
+        if (hash(RELOAD, salt) == *hash) {
+            RELOAD
+        } else if (hash(SHOOT, salt) == *hash) {
+            SHOOT
+        } else if (hash(BLOCK, salt) == *hash) {
+            BLOCK
+        } else if (hash(REFLECT, salt) == *hash) {
+            REFLECT
+        } else if (hash(KILL_SHOT, salt) == *hash) {
+            KILL_SHOT
+        } else if (hash(NONE, salt) == *hash) {
+            NONE
+        } else {
+            CHEAT
+        }
+    }
+
+    public fun hash(gesture: u8, salt: vector<u8>): vector<u8> {
         vector::push_back(&mut salt, gesture);
         hash::sha2_256(salt)
     }
