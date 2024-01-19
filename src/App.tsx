@@ -16,11 +16,14 @@ import reload from './img/reload.png';
 import cowboy_hat from './img/cowboy_hat.png';
 import background from './img/mountains.jpeg';
 import '../styles.css'
+import { PlayGame } from "./components/PlayGame";
 
 function App() {
   const [game_active, set_game_active] = React.useState(false);
   const [game_id, set_game_id] = React.useState("");
   const [isCopied, setIsCopied] = React.useState(false);
+  const [playerJoined, setPlayerJoined] = React.useState(false);
+  const [isGameCreator, setIsGameCreator] = React.useState(false);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text)
@@ -37,15 +40,17 @@ function App() {
   ///
   return (
     <div 
-    style={{ 
-      backgroundImage: `url(${background})`, // Using the imported image
-      minHeight: '100vh', // Minimum height of 100% of the viewport height
-      backgroundSize: 'cover', // Cover the entire area
-      backgroundPosition: 'center', // Center the background image
-      backgroundAttachment: 'fixed' // Background is fixed during scroll
-    }}
-  >
+      style={{ 
+        backgroundImage: `url(${background})`, // Using the imported image
+        minHeight: '100vh', // Minimum height of 100% of the viewport height
+        backgroundSize: 'cover', // Cover the entire area
+        backgroundPosition: 'center', // Center the background image
+        backgroundAttachment: 'fixed' // Background is fixed during scroll
+      }}
+    >
     <>
+
+    
       <Flex
         position="sticky"
         px="4"
@@ -95,30 +100,34 @@ function App() {
         >
           {
             game_active ? (
-            <div style={{ 
-              padding: '20px', 
-              border: '1px solid #ccc', 
-              borderRadius: '8px',
-              textAlign: 'center',
-              margin: '10px 0',
-              backgroundColor: 'brown'
-            }}>
-              <div> Game Code (click to copy): </div>
-              <div 
-                onClick={() => copyToClipboard(game_id)}
-                style={{
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  marginBottom: '10px',
-                  display: 'inline-block',
-                  backgroundColor: 'gray'
-                }}
-              >
-                {game_id}
-              </div>
-              <GameWindow game_id={game_id} />
-              {isCopied && <div style={{ color: 'rgb(58, 209, 48) ' }}>Copied to clipboard!</div>} {/* Confirmation message */}
-            </div>
+              (playerJoined) ? (
+                // Render PlayGame component when a player has joined
+                <PlayGame game_id={game_id} />
+              ) : (
+                <div style={{ 
+                  padding: '20px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  margin: '10px 0',
+                  backgroundColor: 'brown'
+                }}>
+                  <div> Game Code (click to copy): </div>
+                  <div 
+                    onClick={() => copyToClipboard(game_id)}
+                    style={{
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      marginBottom: '10px',
+                      display: 'inline-block',
+                      backgroundColor: 'gray'
+                    }}
+                  >
+                    {game_id}
+                  </div>
+                  {isCopied && <div style={{ color: 'rgb(58, 209, 48) ' }}>Copied to clipboard!</div>}
+                </div>
+            )
           ) : (
             <div 
             style={{ 
@@ -142,6 +151,7 @@ function App() {
                   onJoined={(id) => {
                     set_game_id(id);
                     set_game_active(true);
+                    setPlayerJoined(true);
                   }}
                 />
               </div>

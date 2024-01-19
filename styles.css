@@ -13,7 +13,16 @@
   background-color: brown;
   font-family: "Rye";
   width: 100%;
-  padding: 10px 0;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.buttontwo {
+  cursor: pointer;
+  background-color: #6667AB;
+  font-family: "Rye";
+  width: 100%;
+  padding: 20px 0;
   text-align: center;
 }
 
@@ -71,4 +80,64 @@
   display: flex;
   align-items: center;
   margin: 0 10px;
+}
+
+.custom-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 60%; /* Adjust this value as needed */
+  table-layout: fixed;
+}
+
+.custom-table th,
+.custom-table td {
+  padding: 1px; /* Adjust padding as needed */
+  text-align: left; /* Adjust text alignment as needed */
+}
+
+.custom-table thead th {
+  background-color: #f5f5f5; /* Replace with desired header background color */
+}
+
+.table-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100vh;
+  padding-bottom: 10px;
+}
+
+.reveal-move {
+  width: 60%;
+}
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 300px;
+  margin-top: 300px;
+}
+
+.user-cowboy-image {
+  max-width: 40%;
+  height: auto;
+  margin-top: 100px; 
+}
+
+.cowboy-image {
+  max-width: 40%;
+  height: auto;
+  margin-top: 100px; 
+}
+
+.heart {
+  max-width: 10%;
+  height: auto;
+}
+
+.bullet {
+  max-width: 1%;
+  height: auto;
 }

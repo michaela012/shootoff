@@ -9,6 +9,15 @@ import { SuiObjectData } from "@mysten/sui.js/client";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { TESTNET_SHOOTOFF_PACKAGE_ID } from "../constants";
 import { hash } from "../hashMove";
+import bullet from '../img/bullet.png';
+import red_heart from '../img/red-heart.png';
+import blank_heart from '../img/blank-heart.png';
+import shoot from '../img/shoot.png';
+import block from '../img/block.png';
+import reload from '../img/reload.png';
+import reflect from '../img/reflect.png';
+import killshot from '../img/killshot.png';
+
 
 export function SelectMove({
   game_id,
@@ -30,32 +39,51 @@ export function SelectMove({
   const SHOOT = 2;
   const BLOCK = 3;
   const REFLECT = 4;
+  const KILL_SHOT = 5;
   return (
-    <div>
-      <Button
-        className="button"
-        onClick={() => submitHashedMove(RELOAD, game_id)}
-      >
-        {"Reload"}
-      </Button>
-      <Button
-        className="button"
-        onClick={() => submitHashedMove(SHOOT, game_id)}
-      >
-        {"Shoot"}
-      </Button>
-      <Button
-        className="button"
-        onClick={() => submitHashedMove(BLOCK, game_id)}
-      >
-        {"Block"}
-      </Button>
-      <Button
-        className="button"
-        onClick={() => submitHashedMove(REFLECT, game_id)}
-      >
-        {"Reflect"}
-      </Button>
+    <div className="table-container">
+      <table className="custom-table">
+        <thead>
+          <tr>
+            <td colSpan={2}>
+              <Button className="button" onClick={() => submitHashedMove(RELOAD, game_id)}>
+                <img src={reload} alt="Reload" style={{ height: '2em' }} />
+                {"Reload"}
+              </Button>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td>      
+              <Button className="button" onClick={() => submitHashedMove(SHOOT, game_id)}>
+              <img src={shoot} alt="Shoot" style={{ height: '2em' }} />
+                {"Shoot"}
+              </Button>
+            </td>
+            <td>
+              <Button className="button" onClick={() => submitHashedMove(BLOCK, game_id)}>
+                <img src={block} alt="Block" style={{ height: '2em' }} />
+                {"Block"}
+              </Button>
+            </td>
+          </tr>
+          <tr>
+            <td>      
+              <Button className="button" onClick={() => submitHashedMove(REFLECT, game_id)}>
+                <img src={reflect} alt="Reflect" style={{ height: '3em' }} />
+                {"Reflect"}
+              </Button>
+            </td>
+            <td>
+              <Button className="button" onClick={() => submitHashedMove(KILL_SHOT, game_id)}>
+                <img src={killshot} alt="Killshot" style={{ height: '2em' }} />
+                {"KillShot"}
+              </Button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 

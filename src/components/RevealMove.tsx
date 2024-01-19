@@ -9,6 +9,7 @@ import { SuiObjectData } from "@mysten/sui.js/client";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { TESTNET_SHOOTOFF_PACKAGE_ID } from "../constants";
 import { hash } from "../hashMove";
+import reveal from '../img/reveal.jpeg';
 
 export function RevealMove({ game_id }) {
   const [salt, setSalt] = React.useState("someSalt");
@@ -24,7 +25,8 @@ export function RevealMove({ game_id }) {
   return (
     <div>
       <Button className="button" onClick={() => revealMove(game_id, salt)}>
-        {"Reflect"}
+        <img src={reveal} alt="reveal" style={{ height: '3em' }} />
+        {"Reveal"}
       </Button>
     </div>
   );

@@ -268,5 +268,3 @@ module shootoff::shootoff {
 //   }
 
 }
-
-  
