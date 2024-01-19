@@ -61,7 +61,7 @@ module shootoff::shootoff {
       prize: buyin,
       player_one: starting_player,
       player_two: option::none<address>(),
-      player_one_lives: 2,
+      player_one_lives: 1,
       player_one_bullets: NONE,
       player_two_lives: NONE,
       player_two_bullets: NONE,
@@ -82,7 +82,7 @@ module shootoff::shootoff {
     assert!(option::is_some<address>(&optional_addr), 0 );
 
     game.player_two = optional_addr;
-    game.player_two_lives = 2;
+    game.player_two_lives = 1;
   }
 
   public fun GameStatus(game: &Game) : u8 {
