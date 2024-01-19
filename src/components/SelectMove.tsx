@@ -60,10 +60,9 @@ export function SelectMove({
   );
 
   async function submitHashedMove(move, game_id) {
-    console.log("in submitHashedMove onclick, move:", move);
-
     let salt = crypto.getRandomValues(new Uint8Array(10)).toString();
     let hashed_move = hash(move, salt);
+    console.log("hash", hashed_move, typeof hashed_move);
     let transactionBlock = new TransactionBlock();
     transactionBlock.moveCall({
       target: `${TESTNET_SHOOTOFF_PACKAGE_ID}::shootoff::SubmitHashedMove`,

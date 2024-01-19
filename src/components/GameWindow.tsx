@@ -19,6 +19,7 @@ export function GameWindow({ game_id }) {
   const [salt, set_salt] = React.useState("someSalt");
   // game states
   const GAME_STATES = {
+    WAIT_FOR_OP_JOIN: 0,
     ENTER_MOVE: 1,
     WAIT_FOR_OP_MOVE: 2,
     REVEAL_MOVE: 3,
@@ -26,7 +27,9 @@ export function GameWindow({ game_id }) {
     LOST_GAME: 5,
     WON_GAME: 6,
   };
-  const [game_state, set_game_state] = React.useState(0);
+  const [game_state, set_game_state] = React.useState(
+    GAME_STATES.WAIT_FOR_OP_JOIN
+  );
   const account = useCurrentAccount();
   const account_address = account?.address as string;
   if (!account_address) {
@@ -36,7 +39,6 @@ export function GameWindow({ game_id }) {
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-      console.log(interval);
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -46,18 +48,36 @@ export function GameWindow({ game_id }) {
       const game_data = getGameData(data.data);
       const game_state = getGameState(game_data, account_address, GAME_STATES);
       set_game_state(game_state);
+      console.log(game_state);
     }
   }, [data, isLoading, error]);
 
   return (
     <div>
-      <SelectMove
-        game_id={game_id}
-        onSelected={(salt) => {
-          set_salt(salt);
-        }}
-      />
-      <RevealMove game_id={game_id} salt={salt} />
+      {game_state == GAME_STATES.WAIT_FOR_OP_JOIN
+        ? "Waiting for opponent to join game."
+        : ""}
+      {game_state == GAME_STATES.ENTER_MOVE ? (
+        <SelectMove
+          game_id={game_id}
+          onSelected={(salt) => {
+            set_salt(salt);
+          }}
+        />
+      ) : (
+        ""
+      )}
+      {game_state == GAME_STATES.REVEAL_MOVE ? (
+        <RevealMove game_id={game_id} salt={salt} />
+      ) : (
+        ""
+      )}
+      {game_state == GAME_STATES.WAIT_FOR_OP_MOVE ||
+      game_state == GAME_STATES.WAIT_FOR_OP_REVEAL
+        ? "Waiting for opponent..."
+        : ""}
+      {game_state == GAME_STATES.LOST_GAME ? "YOU LOSE!" : ""}
+      {game_state == GAME_STATES.WON_GAME ? "YOU WIN!!!!" : ""}
     </div>
   );
 }
@@ -83,6 +103,7 @@ function getGameState(game_data, account_address, states) {
 
   let hash, op_hash, move, op_move, lives, op_lives;
   if (game_data.player_one == account_address) {
+    console.log("player one state update");
     hash = game_data.hash_one;
     op_hash = game_data.hash_two;
     move = game_data.player_one_move;
@@ -98,22 +119,19 @@ function getGameState(game_data, account_address, states) {
     op_lives = game_data.player_one_lives;
   }
 
-  if (!hash) {
-    return states.ENTER_MOVE;
-  }
-  if (!op_hash) {
-    return states.WAIT_FOR_OP_MOVE;
-  }
-  if (!move) {
-    return states.REVEAL_MOVE;
-  }
-  if (!op_move) {
-    return states.WAIT_FOR_OP_REVEAL;
-  }
-  if (lives == 0) {
+  if (!game_data.player_two) {
+    return states.WAIT_FOR_OP_JOIN;
+  } else if (lives == 0) {
     return states.LOST_GAME;
-  }
-  if (op_lives == 0) {
+  } else if (op_lives == 0) {
     return states.WON_GAME;
+  } else if (hash.length == 0) {
+    return states.ENTER_MOVE;
+  } else if (op_hash.length == 0) {
+    return states.WAIT_FOR_OP_MOVE;
+  } else if (!move) {
+    return states.REVEAL_MOVE;
+  } else if (!op_move) {
+    return states.WAIT_FOR_OP_REVEAL;
   }
 }

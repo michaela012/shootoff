@@ -29,13 +29,15 @@ export function RevealMove({ game_id, salt }) {
   );
 
   async function revealMove(game_id, salt) {
+    console.log("salt", salt, typeof salt);
     let transactionBlock = new TransactionBlock();
     transactionBlock.moveCall({
       target: `${TESTNET_SHOOTOFF_PACKAGE_ID}::shootoff::SubmitSecret`,
       arguments: [
         transactionBlock.object(game_id),
         transactionBlock.pure(account_address), //player account address
-        transactionBlock.pure(salt),
+        // transactionBlock.pure(salt), //TODO re-add
+        transactionBlock.pure("randomstring"),
       ],
     });
     signAndExecuteTransactionBlock(
