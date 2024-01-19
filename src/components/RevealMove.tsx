@@ -10,8 +10,7 @@ import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { TESTNET_SHOOTOFF_PACKAGE_ID } from "../constants";
 import { hash } from "../hashMove";
 
-export function RevealMove({ game_id }) {
-  const [salt, setSalt] = React.useState("someSalt");
+export function RevealMove({ game_id, salt }) {
   const client = useSuiClient();
   const { mutate: signAndExecuteTransactionBlock } =
     useSignAndExecuteTransactionBlock();
@@ -24,19 +23,21 @@ export function RevealMove({ game_id }) {
   return (
     <div>
       <Button className="button" onClick={() => revealMove(game_id, salt)}>
-        {"Reflect"}
+        {"Play Move"}
       </Button>
     </div>
   );
 
   async function revealMove(game_id, salt) {
+    console.log("salt", salt, typeof salt);
     let transactionBlock = new TransactionBlock();
     transactionBlock.moveCall({
       target: `${TESTNET_SHOOTOFF_PACKAGE_ID}::shootoff::SubmitSecret`,
       arguments: [
         transactionBlock.object(game_id),
         transactionBlock.pure(account_address), //player account address
-        transactionBlock.pure(salt),
+        // transactionBlock.pure(salt), //TODO re-add
+        transactionBlock.pure("randomstring"),
       ],
     });
     signAndExecuteTransactionBlock(
