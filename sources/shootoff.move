@@ -3,6 +3,7 @@ module shootoff::shootoff {
   use sui::tx_context::{Self, TxContext};
   use sui::transfer;
   use std::vector;
+  use std::string;
   use std::hash;
   use std::address;
   use std::option;
@@ -118,16 +119,16 @@ module shootoff::shootoff {
     };
   }
 
-  public fun SubmitSecret(game: &mut Game, player: address, secret: String){
+  public fun SubmitSecret(game: &mut Game, player: address, secret: vector<u8>){
     let current_game_status = GameStatus(game);
 
     assert!(current_game_status == STATUS_REVEALING || current_game_status == STATUS_READY, 0);
     assert!(game.player_one == player || game.player_two == option::some<address>(player), 0);
 
     if (player == game.player_one && game.player_one_move == NONE) {
-      game.player_one_move = takeAction(secret, game.hash_one);
+      game.player_one_move = takeAction(game, player, secret);
     } else if (option::some<address>(player) == game.player_two && game.player_one_move == NONE) {
-      game.player_two_move = takeAction(secret, game.hash_two);
+      game.player_two_move = takeAction(game, player, secret);
     } else {
       abort 0 // unreachable
     };
@@ -138,41 +139,39 @@ module shootoff::shootoff {
     }
   }
 
-  fun takeAction(game: &mut Game, player_number: u8, salt: vector<u8>): u8 {
+  fun takeAction(game: &mut Game, player: address, salt: vector<u8>): u8 {
     let hash = vector[];
-    let player: address = game.player_one;
 
-    if (player_number == 1) {
+    if (player == game.player_one) {
       hash = game.hash_one;
     } else {
       hash = game.hash_two;
-      player = game.player_two;
-    }
+    };
 
-    if (hash(RELOAD, salt) == *hash) {
-      reload(game, player);
-    } else if (hash(SHOOT, salt) == *hash) {
-      shoot(game, player);
-    } else if (hash(BLOCK, salt) == *hash) {
-      block(game, player);
-    } else if (hash(REFLECT, salt) == *hash) {
-      reflect(game, player);
-    } else if (hash(KILL_SHOT, salt) == *hash) {
+    if (hash(RELOAD, salt) == hash) {
+      reload(game, player)
+    } else if (hash(SHOOT, salt) == hash) {
+      shoot(game, player)
+    } else if (hash(BLOCK, salt) == hash) {
+      BLOCK
+    } else if (hash(REFLECT, salt) == hash) {
+      reflect(game, player)
+    } else if (hash(KILL_SHOT, salt) == hash) {
       kill_shot(game, player)
-    } else if (hash(NONE, salt) == *hash) {
+    } else if (hash(NONE, salt) == hash) {
         NONE
     } else {
         CHEAT
     }
   }
 
-  fun playRound(game) {
-    p2_win = playerWinsRound(game.player_one_move, game.player_two_move);
-    p2_win = playerWinsRound(game.player_two_move, game.player_one_move);
+  fun playRound(game: &mut Game) {
+    let p1_win = playerWinsRound(game.player_one_move, game.player_two_move);
+    let p2_win = playerWinsRound(game.player_two_move, game.player_one_move);
 
-    if (p1_wins) {
+    if (p1_win) {
       game.player_two_lives = game.player_two_lives - 1;
-    } else if (p2_wins) {
+    } else if (p2_win) {
       game.player_one_lives = game.player_one_lives - 1;
     };
 
@@ -188,8 +187,8 @@ module shootoff::shootoff {
     else { false } 
   }
 
-  fun checkForWinner(game: &mut Game, player) {
-
+  fun checkForWinner(game: &mut Game, player: address) {
+    
   }
 
 
@@ -197,7 +196,7 @@ module shootoff::shootoff {
     if (player == game.player_one && game.player_one_bullets < 3) {
         game.player_one_bullets = game.player_one_bullets + 1;
         RELOAD 
-    } else if (player == game.player_two && game.player_two_bullets < 3) {
+    } else if (option::some<address>(player) == game.player_two && game.player_two_bullets < 3) {
         game.player_two_bullets = game.player_two_bullets + 1;
         RELOAD 
     } else {
@@ -209,7 +208,7 @@ module shootoff::shootoff {
     if (player == game.player_one && game.player_one_bullets > 0) {
         game.player_one_bullets = game.player_one_bullets - 1;
         SHOOT 
-    } else if (player == game.player_two && game.player_two_bullets > 0) {
+    } else if (option::some<address>(player) == game.player_two && game.player_two_bullets > 0) {
         game.player_two_bullets = game.player_two_bullets - 1;
         SHOOT 
     } else {
@@ -221,7 +220,7 @@ module shootoff::shootoff {
     if (player == game.player_one && game.player_one_bullets > 0) {
         game.player_one_bullets = game.player_one_bullets - 1;
         REFLECT 
-    } else if (player == game.player_two && game.player_two_bullets > 0) {
+    } else if (option::some<address>(player) == game.player_two && game.player_two_bullets > 0) {
         game.player_two_bullets = game.player_two_bullets - 1;
         REFLECT 
     } else {
@@ -233,7 +232,7 @@ module shootoff::shootoff {
     if (player == game.player_one && game.player_one_bullets == 3) {
         game.player_one_bullets = game.player_one_bullets - 3;
         KILL_SHOT 
-    } else if (player == game.player_two && game.player_two_bullets == 3) {
+    } else if (option::some<address>(player) == game.player_two && game.player_two_bullets == 3) {
         game.player_two_bullets = game.player_two_bullets - 3;
         KILL_SHOT 
     } else {
@@ -241,11 +240,10 @@ module shootoff::shootoff {
     }
   }
 
-  check
-
-
-
-
+  fun hash(gesture: u8, salt: vector<u8>): vector<u8> {
+    vector::push_back(&mut salt, gesture);
+    hash::sha2_256(salt)
+  }
 
 
 //    #[test]
