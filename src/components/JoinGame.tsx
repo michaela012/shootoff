@@ -38,8 +38,7 @@ export function JoinGame({ onJoined }: { onJoined: (id: string) => void }) {
 
   async function joinGame(event) {
     event.preventDefault();
-    console.log("join game function, game id:", game_id);
-    console.log("account_address", account_address);
+    console.log("joining game id:", game_id);
     // const { getGameInfo } = useGetGameInfo();
     // const { data, isLoading, error, refetch } = getGameInfo(game_id);
 

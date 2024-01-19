@@ -40,7 +40,10 @@ function App() {
           style={{ background: "var(--gray-a2)", minHeight: 500 }}
         >
           {game_active ? (
-            <div> Your game: {game_id} </div>
+            <div>
+              <div> Your game: {game_id} </div>
+              <GameWindow game_id={game_id} />
+            </div>
           ) : (
             <div>
               <CreateGame

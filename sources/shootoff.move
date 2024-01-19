@@ -73,12 +73,11 @@ module shootoff::shootoff {
     
   }
 
-  // public fun JoinGame(player: address, ctx: &mut TxContext) {
   public fun JoinGame(game: &mut Game, new_player: address, ctx: &mut TxContext) {
-    //check new player != player one
-    // assert!(new_player != game.player_one, 0);  --> allowing for testing
-    //check game not full
-    // assert!( option::is_none<address>(&game.player_two), 0);
+    // check new player != player one
+    assert!(new_player != game.player_one, 0);
+    // check game not full
+    assert!( option::is_none<address>(&game.player_two), 0);
     let optional_addr = option::some<address>(new_player);
     assert!(option::is_some<address>(&optional_addr), 0 );
 
@@ -177,7 +176,7 @@ module shootoff::shootoff {
 
   }
 
-  public fun playerWinsRound(p1_move: u8, p2_move: u8): bool {
+  fun playerWinsRound(p1_move: u8, p2_move: u8): bool {
     if (p1_move == REFLECT && p2_move == SHOOT) { true }
     else if (p1_move == REFLECT && p2_move == KILL_SHOT) { true }
     else if (p1_move == SHOOT && p2_move == RELOAD) { true }
