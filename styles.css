@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 #name {
   font-family: "Rye";
   font-size: 80px;
@@ -5,6 +9,66 @@
 }
 
 .button {
+  cursor: pointer;
   background-color: brown;
   font-family: "Rye";
+  width: 100%;
+  padding: 10px 0;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.bounce {
+  animation: bounce 1.5s infinite;
+}
+
+.input-textbox {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.game-options {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.game-option-block {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 300px; /* Example fixed width for blocks */
+  margin: auto; /* Center blocks if they are smaller than their container */
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
 }
