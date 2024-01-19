@@ -22,7 +22,7 @@ export function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
   return (
     <Button className="button" onClick={createNewGame}>
       {" "}
-      Start A Game{" "}
+      Host Game{" "}
     </Button>
   );
 
