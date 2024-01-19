@@ -116,6 +116,7 @@ function App() {
               >
                 {game_id}
               </div>
+              <GameWindow game_id={game_id} />
               {isCopied && <div style={{ color: 'rgb(58, 209, 48) ' }}>Copied to clipboard!</div>} {/* Confirmation message */}
             </div>
           ) : (
