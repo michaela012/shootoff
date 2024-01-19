@@ -21,17 +21,23 @@ export function JoinGame({ onJoined }: { onJoined: (id: string) => void }) {
 
   return (
     <form onSubmit={joinGame}>
-      <label>
+      <label className="label">
         <input
           type="text"
           value={game_id}
           onChange={(e) => set_game_id(e.target.value)}
           placeholder="Game ID"
+          style={{
+            width: '100%',
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '4px',
+            border: '1px solid #ccc'
+          }}
         />
       </label>
       <Button className="button" type="submit">
-        {" "}
-        Join Game{" "}
+        Join Game
       </Button>
     </form>
   );
