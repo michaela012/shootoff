@@ -14,6 +14,7 @@ import { RevealMove } from "./RevealMove";
 
 export function GameWindow({ game_id }) {
   const [salt, set_salt] = React.useState("someSalt");
+  const [game_state, set_game_state] = React.useState(0);
 
   return (
     <div>
@@ -23,7 +24,7 @@ export function GameWindow({ game_id }) {
           set_salt(salt);
         }}
       />
-      <RevealMove game_id={game_id} />
+      <RevealMove game_id={game_id} salt={salt} />
     </div>
   );
 }

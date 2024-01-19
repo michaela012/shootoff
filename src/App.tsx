@@ -12,7 +12,6 @@ function App() {
   const [game_active, set_game_active] = React.useState(false);
   const [game_id, set_game_id] = React.useState("");
 
-  ///
   return (
     <>
       <Flex
